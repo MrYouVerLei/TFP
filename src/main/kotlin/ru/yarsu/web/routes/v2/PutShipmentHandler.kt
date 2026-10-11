@@ -99,7 +99,7 @@ class PutShipmentHandler(
             getShipmentByIdOperation.get(id)
                 ?: return Response(NOT_FOUND).with(jsonBodyLens of jsonShipmentNotFound(id))
 
-        putShipmentOperation.edit(id, shipment, editShipment)
+        putShipmentOperation.edit(shipment, editShipment)
 
         return Response(NO_CONTENT)
     }

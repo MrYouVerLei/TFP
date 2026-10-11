@@ -209,9 +209,18 @@ class SwgStorage(
     fun create(newShipment: NewShipment): UUID {
         val uuid = generateId(swgMap.keys)
         val swg = makeShipment(newShipment, uuid)
-        swgMap[uuid] = swg
+        val newMap = putShipment(swgMap, swg)
+        swgMap.clear()
+        swgMap.putAll(newMap)
 
         return uuid
+    }
+
+    // C
+    private fun putShipment(map: Map<UUID, Swg>, shipment: Swg): Map<UUID, Swg> {
+        val newMap = map.toMutableMap()
+        newMap[shipment.id] = shipment
+        return newMap
     }
 
     // A
@@ -243,12 +252,14 @@ class SwgStorage(
 
     // A
     fun edit(
-        id: UUID,
         shipment: Swg,
         editShipment: EditShipment,
     ) {
         val editSwg = updateSwgFields(shipment, editShipment)
-        swgMap[id] = editSwg
+        val newMap = putShipment(swgMap, editSwg)
+        swgMap.clear()
+        swgMap.putAll(newMap)
+
         return
     }
 
