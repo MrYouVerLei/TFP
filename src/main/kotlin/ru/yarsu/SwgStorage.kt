@@ -12,14 +12,17 @@ import java.util.UUID
 class SwgStorage(
     swgList: List<Swg>,
 ) {
+    // A
     private val swgMap = mutableMapOf<UUID, Swg>()
 
+    // A
     init {
         for (item in swgList) {
             swgMap[item.id] = item
         }
     }
 
+    // A
     fun writeFile(file: File) {
         csvWriter().open(file) {
             writeRow("Id,Title,SWG,Measure,Count,Price,Cost,ShipmentDateTime,Model,Registration,Washing,Manager")
@@ -29,8 +32,10 @@ class SwgStorage(
         }
     }
 
+    // A
     fun getSwgList(): List<Swg> = swgMap.values.toList()
 
+    // A
     fun getSwgListList(): List<List<String>> {
         val text = mutableListOf<List<String>>()
         for (item in getSwgList()) {
@@ -39,6 +44,7 @@ class SwgStorage(
         return text
     }
 
+    // A
     fun get(id: UUID): Swg? {
         for (item in swgMap) {
             if (item.value.id == id) {
@@ -48,6 +54,7 @@ class SwgStorage(
         return null
     }
 
+    // A
     fun add(swg: Swg): UUID {
         if (swgMap.containsKey(swg.id)) {
             throw IllegalArgumentException("Акт отгрузки ПГС с идентификатором ${swg.id} уже существует")
@@ -57,41 +64,28 @@ class SwgStorage(
         }
     }
 
+    // A
     fun getSwgList(
         page: Int,
         recordsPerPage: Int,
     ): List<Swg> {
         val swgSort = swgMap.values.toList().sortedWith(compareBy<Swg> { it.shipmentDateTime }.thenBy { it.id })
+        val shipmentsActsPagination = calculatePagination(swgSort, page, recordsPerPage)
 
-        val startIndex = recordsPerPage * (page - 1)
-        if (startIndex > swgSort.size) {
-            return listOf()
-        }
-        var lastIndex = recordsPerPage * page
-        if (lastIndex > swgSort.size) {
-            lastIndex = swgSort.size
-        }
-
-        return swgSort.subList(startIndex, lastIndex)
+        return shipmentsActsPagination
     }
 
+    // A
     fun getSwgList(pagParam: PaginationParameters): List<Swg> {
         val page = pagParam.page
         val recordsPerPage = pagParam.recordsPerPage
         val swgSort = swgMap.values.toList().sortedWith(compareBy<Swg> { it.shipmentDateTime }.thenBy { it.id })
+        val shipmentsActsPagination = calculatePagination(swgSort, page, recordsPerPage)
 
-        val startIndex = recordsPerPage * (page - 1)
-        if (startIndex > swgSort.size) {
-            return listOf()
-        }
-        var lastIndex = recordsPerPage * page
-        if (lastIndex > swgSort.size) {
-            lastIndex = swgSort.size
-        }
-
-        return swgSort.subList(startIndex, lastIndex)
+        return shipmentsActsPagination
     }
 
+    // A
     fun getSwgListByTruckId(id: UUID): List<Swg> {
         val shipmentsActsFilter = swgMap.values.filter { it.dumpTruck == id }
         val shipmentsActsSort =
@@ -99,6 +93,7 @@ class SwgStorage(
         return shipmentsActsSort
     }
 
+    // A
     fun getShipmentsCountForTrucks(trucksList: List<DumpTruck>): Map<DumpTruck, Int> {
         val resultmap = mutableMapOf<DumpTruck, Int>()
         for (item in trucksList) {
@@ -107,6 +102,7 @@ class SwgStorage(
         return resultmap
     }
 
+    // A
     fun getListSwgByType(
         type: TypeSwg,
         page: Int,
@@ -115,19 +111,26 @@ class SwgStorage(
         val shipmentsActsFilter = swgMap.values.filter { it.swg == type }
         val shipmentsActsSort =
             shipmentsActsFilter.sortedWith(compareByDescending<Swg> { it.shipmentDateTime }.thenBy { it.id })
+        val shipmentsActsPagination = calculatePagination(shipmentsActsSort, page, recordsPerPage)
 
+        return shipmentsActsPagination
+    }
+
+    // C
+    private fun <T> calculatePagination(list: List<T>, page: Int, recordsPerPage: Int,): List<T> {
         val startIndex = recordsPerPage * (page - 1)
-        if (startIndex > shipmentsActsSort.size) {
+        if (startIndex > list.size) {
             return listOf()
         }
         var lastIndex = recordsPerPage * page
-        if (lastIndex > shipmentsActsSort.size) {
-            lastIndex = shipmentsActsSort.size
+        if (lastIndex > list.size) {
+            lastIndex = list.size
         }
 
-        return shipmentsActsSort.subList(startIndex, lastIndex)
+        return list.subList(startIndex, lastIndex).toList()
     }
 
+    // A
     fun getListSwgByType(
         type: TypeSwg,
         pagParam: PaginationParameters,
@@ -137,19 +140,12 @@ class SwgStorage(
         val shipmentsActsFilter = swgMap.values.filter { it.swg == type }
         val shipmentsActsSort =
             shipmentsActsFilter.sortedWith(compareByDescending<Swg> { it.shipmentDateTime }.thenBy { it.id })
+        val shipmentsActsPagination = calculatePagination(shipmentsActsSort, page, recordsPerPage)
 
-        val startIndex = recordsPerPage * (page - 1)
-        if (startIndex > shipmentsActsSort.size) {
-            return listOf()
-        }
-        var lastIndex = recordsPerPage * page
-        if (lastIndex > shipmentsActsSort.size) {
-            lastIndex = shipmentsActsSort.size
-        }
-
-        return shipmentsActsSort.subList(startIndex, lastIndex)
+        return shipmentsActsPagination
     }
 
+    // A
     fun getListSwgForPeriod(
         from: LocalDate,
         to: LocalDate,
@@ -172,19 +168,12 @@ class SwgStorage(
                                 .isEqual(to)
                     )
             }
+        val shipmentsActsPagination = calculatePagination(shipmentsActsFilter, page, recordsPerPage)
 
-        val startIndex = recordsPerPage * (page - 1)
-        if (startIndex > shipmentsActsFilter.size) {
-            return listOf()
-        }
-        var lastIndex = recordsPerPage * page
-        if (lastIndex > shipmentsActsFilter.size) {
-            lastIndex = shipmentsActsFilter.size
-        }
-
-        return shipmentsActsFilter.subList(startIndex, lastIndex)
+        return shipmentsActsPagination
     }
 
+    // A
     fun getListSwgForPeriod(
         from: LocalDate,
         to: LocalDate,
@@ -208,81 +197,74 @@ class SwgStorage(
                                 .isEqual(to)
                     )
             }
+        val shipmentsActsPagination = calculatePagination(shipmentsActsFilter, page, recordsPerPage)
 
-        val startIndex = recordsPerPage * (page - 1)
-        if (startIndex > shipmentsActsFilter.size) {
-            return listOf()
-        }
-        var lastIndex = recordsPerPage * page
-        if (lastIndex > shipmentsActsFilter.size) {
-            lastIndex = shipmentsActsFilter.size
-        }
-
-        return shipmentsActsFilter.subList(startIndex, lastIndex)
+        return shipmentsActsPagination
     }
 
+    // A
     fun getListSwgForYear(year: Int): List<Swg> = swgMap.values.filter { it.shipmentDateTime.year == year }
 
+    // A
     fun create(newShipment: NewShipment): UUID {
-        var uuid = UUID.randomUUID()
-        while (get(uuid) != null) {
-            uuid = UUID.randomUUID()
-        }
-
-        val swg =
-            Swg(
-                uuid,
-                newShipment.title,
-                newShipment.swg,
-                newShipment.measure,
-                newShipment.count,
-                newShipment.price,
-                newShipment.cost,
-                newShipment.shipmentDateTime,
-                newShipment.dumpTruck,
-                newShipment.washing,
-                newShipment.manager,
-            )
+        val uuid = generateId(swgMap.keys)
+        val swg = makeShipment(newShipment, uuid)
         swgMap[uuid] = swg
 
         return uuid
     }
 
+    // A
+    private fun generateId(ids: Set<UUID>): UUID {
+        var uuid = UUID.randomUUID()
+        while (ids.contains(uuid)) {
+            uuid = UUID.randomUUID()
+        }
+
+        return uuid
+    }
+
+    // C
+    private fun makeShipment(newShipment: NewShipment, uuid: UUID): Swg {
+        return Swg(
+            uuid,
+            newShipment.title,
+            newShipment.swg,
+            newShipment.measure,
+            newShipment.count,
+            newShipment.price,
+            newShipment.cost,
+            newShipment.shipmentDateTime,
+            newShipment.dumpTruck,
+            newShipment.washing,
+            newShipment.manager,
+        )
+    }
+
+    // A
     fun edit(
         id: UUID,
         shipment: Swg,
         editShipment: EditShipment,
     ) {
-        val shipmentDateTime: LocalDateTime
-        val washing: Boolean
-
-        if (editShipment.shipmentDateTime == null) {
-            shipmentDateTime = shipment.shipmentDateTime
-        } else {
-            shipmentDateTime = editShipment.shipmentDateTime
-        }
-
-        if (editShipment.washing == null) {
-            washing = shipment.washing
-        } else {
-            washing = editShipment.washing
-        }
-
-        val editSwg =
-            Swg(
-                id,
-                editShipment.title,
-                editShipment.swg,
-                editShipment.measure,
-                editShipment.count,
-                editShipment.price,
-                editShipment.cost,
-                shipmentDateTime,
-                editShipment.dumpTruck,
-                washing,
-                editShipment.manager,
-            )
+        val editSwg = updateSwgFields(shipment, editShipment)
         swgMap[id] = editSwg
         return
+    }
+
+    // C
+    private fun updateSwgFields(shipment: Swg, editShipment: EditShipment): Swg {
+        return shipment.copy(
+            title = editShipment.title,
+            swg = editShipment.swg,
+            measure = editShipment.measure,
+            count = editShipment.count,
+            price = editShipment.price,
+            cost = editShipment.cost,
+            shipmentDateTime = editShipment.shipmentDateTime ?: shipment.shipmentDateTime,
+            dumpTruck = editShipment.dumpTruck,
+            washing = editShipment.washing ?: shipment.washing,
+            manager = editShipment.manager
+        )
     }
 }
