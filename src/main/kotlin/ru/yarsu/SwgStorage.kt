@@ -95,11 +95,16 @@ class SwgStorage(
 
     // A
     fun getShipmentsCountForTrucks(trucksList: List<DumpTruck>): Map<DumpTruck, Int> {
-        val resultmap = mutableMapOf<DumpTruck, Int>()
+        return calculateShipmentsCountForTrucks(trucksList, swgMap.values.toList())
+    }
+
+    // C
+    private fun calculateShipmentsCountForTrucks(trucksList: List<DumpTruck>, shipments: List<Swg>): Map<DumpTruck, Int> {
+        val resultMap = mutableMapOf<DumpTruck, Int>()
         for (item in trucksList) {
-            resultmap[item] = getSwgList().count { it.dumpTruck == item.id }
+            resultMap[item] = shipments.count { it.dumpTruck == item.id }
         }
-        return resultmap
+        return resultMap
     }
 
     // A
